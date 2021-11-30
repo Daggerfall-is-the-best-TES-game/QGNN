@@ -65,8 +65,8 @@ def get_Adj_matrix(batch_graph):
     Adj_block_idx = np.concatenate([Adj_block_idx, self_loop_edge], 1)
     Adj_block_elem = np.concatenate([Adj_block_elem, elem], 0)
 
-    Adj_block_idx = torch.from_numpy(Adj_block_idx)
-    Adj_block_elem = torch.from_numpy(Adj_block_elem)
+    Adj_block_idx = torch.from_numpy(Adj_block_idx).long()
+    Adj_block_elem = torch.from_numpy(Adj_block_elem).long()
 
     Adj_block = torch.sparse.FloatTensor(Adj_block_idx, Adj_block_elem, torch.Size([start_idx[-1], start_idx[-1]]))
 
@@ -102,7 +102,7 @@ def get_batch_data(batch_graph):
     graph_pool = get_graphpool(batch_graph)
 
     graph_labels = np.array([graph.label for graph in batch_graph])
-    graph_labels = torch.from_numpy(graph_labels).to(device)
+    graph_labels = torch.from_numpy(graph_labels).long().to(device)
 
     return Adj_block, X_concat, graph_pool, graph_labels
 

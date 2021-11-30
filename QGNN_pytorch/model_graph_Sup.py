@@ -30,7 +30,7 @@ class SupQGNN(nn.Module):
         prediction_scores = 0
         input = X_concat
         for layer in range(self.num_GNN_layers):
-            input = self.q4gnnlayers[layer](input.double(), Adj_block, True)
+            input = self.q4gnnlayers[layer](input.double(), Adj_block.double())
             #sum pooling
             graph_embeddings = torch.spmm(graph_pool, input.float())
             graph_embeddings = self.dropouts[layer](graph_embeddings)

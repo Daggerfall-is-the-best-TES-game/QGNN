@@ -34,6 +34,7 @@ QGNN           |  GNNs for knowledge graph completion
 - Scipy		1.3
 - Tensorflow 	1.14 or
 - Pytorch 	1.5.0 & CUDA 10.1
+- scikit-learn
 
 ### Training
 

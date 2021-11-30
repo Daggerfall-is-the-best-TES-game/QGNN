@@ -63,21 +63,15 @@ class QGNNLayer(Module):
         stdv = math.sqrt(6.0 / (self.weight.size(0) + self.weight.size(1)))
         self.weight.data.uniform_(-stdv, stdv)
 
-    def forward(self, input, adj, double_type_used_in_graph=False):
+    def forward(self, input, adj):
 
         x = self.dropout(input) # Current Pytorch 1.5.0 doesn't support Dropout for sparse matrix
 
         if self.quaternion_ff:
             hamilton = make_quaternion_mul(self.weight)
-            if double_type_used_in_graph:  # to deal with scalar type between node and graph classification tasks
-                hamilton = hamilton.double()
-
-            support = torch.mm(x, hamilton)  # Hamilton product, quaternion multiplication!
+            support = torch.mm(x, hamilton.type_as(x))  # Hamilton product, quaternion multiplication!
         else:
             support = torch.mm(x, self.weight)
-
-        if double_type_used_in_graph: #to deal with scalar type between node and graph classification tasks, caused by pre-defined feature inputs
-            support = support.double()
 
         output = torch.spmm(adj, support)
 
