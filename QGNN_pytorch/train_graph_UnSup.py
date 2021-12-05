@@ -123,13 +123,13 @@ batch_nodes = Batch_Loader()
 
 print("Loading data... finished!")
 #===================================
-model = UnSupQGNN(feature_dim_size=feature_dim_size*4,  # A + Ai + Aj + Ak
-                hidden_size=args.hidden_size,
-                num_GNN_layers=args.num_GNN_layers,
-                vocab_size=graph_pool.shape[1],
-                sampled_num=args.sampled_num,
-                dropout=args.dropout,
-                device=device).to(device)
+model = UnSupOGNN(feature_dim_size=feature_dim_size * 4,  # A + Ai + Aj + Ak
+                  hidden_size=args.hidden_size,
+                  num_GNN_layers=args.num_GNN_layers,
+                  vocab_size=graph_pool.shape[1],
+                  sampled_num=args.sampled_num,
+                  dropout=args.dropout,
+                  device=device).to(device)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
 num_batches_per_epoch = int((len(graphs) - 1) / args.batch_size) + 1

@@ -16,16 +16,16 @@ if torch.cuda.is_available():
     torch.cuda.manual_seed_all(123)
 
 from utils_node_cls import *
-from q4gnn import *
+from o8gnn import *
 
 # Parameters
 # ==================================================
-parser = ArgumentParser("QGNN", formatter_class=ArgumentDefaultsHelpFormatter, conflict_handler='resolve')
+parser = ArgumentParser("OGNN", formatter_class=ArgumentDefaultsHelpFormatter, conflict_handler='resolve')
 parser.add_argument("--dataset", default="cora", help="Name of the dataset.")
 parser.add_argument('--epochs', type=int, default=100, help='Number of epochs to train.')
 parser.add_argument('--learning_rate', type=float, default=0.05, help='Initial learning rate.')
 parser.add_argument('--weight_decay', type=float, default=5e-4, help='Weight decay (L2 loss on parameters).')
-parser.add_argument('--hidden_size', type=int, default=16, help='Hidden_size//4 = number of quaternion units within each hidden layer.')
+parser.add_argument('--hidden_size', type=int, default=16, help='Hidden_size//8 = number of octonion units within each hidden layer.')
 parser.add_argument('--dropout', type=float, default=0.5, help='Dropout rate (1 - keep probability).')
 parser.add_argument('--fold', type=int, default=2, help='The fold index. 0-9.')
 parser.add_argument('--fastmode', action='store_true', default=False, help='Validate during training pass.')
@@ -49,8 +49,8 @@ def sparse_mx_to_torch_sparse_tensor(sparse_mx):
     shape = torch.Size(sparse_mx.shape)
     return torch.sparse.FloatTensor(indices, values, shape).to(device)
 
-""" quaternion preprocess for feature vectors """
-def quaternion_preprocess_features(features):
+""" octonion preprocess for feature vectors """
+def octonion_preprocess_features(features):
     """Row-normalize feature matrix"""
     rowsum = np.array(features.sum(1))
     r_inv = np.power(rowsum, -1).flatten()
@@ -58,11 +58,11 @@ def quaternion_preprocess_features(features):
     r_mat_inv = sp.diags(r_inv)
     features = r_mat_inv.dot(features)
     features = features.todense()
-    features = np.tile(features, 4) # A + Ai + Aj + Ak
+    features = np.tile(features, 8)
     return torch.from_numpy(features).to(device)
 
 # Some preprocessing
-features = quaternion_preprocess_features(features)
+features = octonion_preprocess_features(features)
 adj = normalize_adj(adj + sp.eye(adj.shape[0])).tocoo()
 adj = sparse_mx_to_torch_sparse_tensor(adj)
 
@@ -73,20 +73,20 @@ def accuracy(output, labels):
     correct = correct.sum()
     return correct / len(labels)
 
-'''Quaternion graph neural network! 2-layer Q4GNN!'''
-class QGNN(torch.nn.Module):
+'''Octonion graph neural network! 2-layer O8GNN!'''
+class OGNN(torch.nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout=0.5):
-        super(QGNN, self).__init__()
-        self.q4gnn1 = QGNNLayer(nfeat, nhid, dropout=dropout) 
-        self.q4gnn2 = QGNNLayer(nhid, nclass, dropout=dropout, quaternion_ff=False, act=lambda x:x) # prediction layer
+        super().__init__()
+        self.o8gnn1 = OGNNLayer(nfeat, nhid, dropout=dropout)
+        self.o8gnn2 = OGNNLayer(nhid, nclass, dropout=dropout, octonion_ff=False, act=lambda x: x)  # prediction layer
 
     def forward(self, x, adj):
-        x = self.q4gnn1(x, adj)
-        x = self.q4gnn2(x, adj)
+        x = self.o8gnn1(x, adj)
+        x = self.o8gnn2(x, adj)
         return F.log_softmax(x, dim=1)
 
 # Model and optimizer
-model = QGNN(nfeat=features.size(1), nhid=args.hidden_size, nclass=y_train.shape[1], dropout=args.dropout).to(device)
+model = OGNN(nfeat=features.size(1), nhid=args.hidden_size, nclass=y_train.shape[1], dropout=args.dropout).to(device)
 optimizer = optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
 
 """Adapted from https://github.com/tkipf/pygcn/blob/master/pygcn/train.py"""

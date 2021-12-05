@@ -20,7 +20,7 @@ if torch.cuda.is_available():
 
 # Parameters
 # ==================================================
-parser = ArgumentParser("QGNN", formatter_class=ArgumentDefaultsHelpFormatter, conflict_handler='resolve')
+parser = ArgumentParser("OGNN", formatter_class=ArgumentDefaultsHelpFormatter, conflict_handler='resolve')
 parser.add_argument("--run_folder", default="../", help="")
 parser.add_argument("--dataset", default="MUTAG", help="Name of the dataset.")
 parser.add_argument("--learning_rate", default=0.0005, type=float, help="Learning rate")
@@ -30,7 +30,7 @@ parser.add_argument("--saveStep", default=1, type=int, help="")
 parser.add_argument("--model_name", default='MUTAG', help="")
 parser.add_argument("--dropout", default=0.5, type=float, help="Dropout")
 parser.add_argument("--num_GNN_layers", default=2, type=int, help="Number of hidden layers")
-parser.add_argument("--hidden_size", default=16, type=int, help="Hidden_size//4 = number of quaternion units within each hidden layer.")
+parser.add_argument("--hidden_size", default=16, type=int, help="Hidden_size//8 = number of octonion units within each hidden layer.")
 parser.add_argument('--fold_idx', type=int, default=8, help='the index of fold in 10-fold validation. 0-9.')
 args = parser.parse_args()
 
@@ -93,8 +93,8 @@ def get_graphpool(batch_graph):
 def get_batch_data(batch_graph):
     # features
     X_concat = np.concatenate([graph.node_features for graph in batch_graph], 0)
-    # A + Ai + Aj + Ak
-    X_concat = np.tile(X_concat, 4)  # feature_dim_size*4
+
+    X_concat = np.tile(X_concat, 8)  # feature_dim_size*8
     X_concat = torch.from_numpy(X_concat).to(device)
     # adj
     Adj_block = get_Adj_matrix(batch_graph)
@@ -118,7 +118,7 @@ Adj_block, X_concat, graph_pool, graph_labels = batch_nodes()
 
 print("Loading data... finished!")
 
-model = SupQGNN(feature_dim_size=feature_dim_size*4,  # A + Ai + Aj + Ak
+model = SupOGNN(feature_dim_size=feature_dim_size * 8,
                 hidden_size=args.hidden_size, dropout=args.dropout,
                 num_GNN_layers=args.num_GNN_layers,
                 num_classes=num_classes).to(device)
@@ -174,7 +174,7 @@ def evaluate():
 
 """main process"""
 import os
-out_dir = os.path.abspath(os.path.join(args.run_folder, "../runs_pytorch_QGNN_Sup", args.model_name))
+out_dir = os.path.abspath(os.path.join(args.run_folder, "../runs_pytorch_OGNN_Sup", args.model_name))
 print("Writing to {}\n".format(out_dir))
 # Checkpoint directory
 checkpoint_dir = os.path.abspath(os.path.join(out_dir, "checkpoints"))

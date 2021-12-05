@@ -2,22 +2,22 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from q4gnn import *
+from o8gnn import *
 
-class SupQGNN(nn.Module):
+class SupOGNN(nn.Module):
     def __init__(self, feature_dim_size, hidden_size, num_GNN_layers, num_classes, dropout):
-        super(SupQGNN, self).__init__()
+        super(SupOGNN, self).__init__()
         self.feature_dim_size = feature_dim_size
         self.hidden_size = hidden_size
         self.num_classes = num_classes
         self.num_GNN_layers = num_GNN_layers
         #
-        self.q4gnnlayers = torch.nn.ModuleList()
+        self.o8gnnlayers = torch.nn.ModuleList()
         for layer in range(self.num_GNN_layers):
             if layer == 0:
-                self.q4gnnlayers.append(QGNNLayer(self.feature_dim_size, self.hidden_size, dropout=dropout))
+                self.o8gnnlayers.append(OGNNLayer(self.feature_dim_size, self.hidden_size, dropout=dropout))
             else:
-                self.q4gnnlayers.append(QGNNLayer(self.hidden_size, self.hidden_size, dropout=dropout))
+                self.o8gnnlayers.append(OGNNLayer(self.hidden_size, self.hidden_size, dropout=dropout))
         #
         self.predictions = torch.nn.ModuleList()
         self.dropouts = torch.nn.ModuleList()
@@ -30,7 +30,7 @@ class SupQGNN(nn.Module):
         prediction_scores = 0
         input = X_concat
         for layer in range(self.num_GNN_layers):
-            input = self.q4gnnlayers[layer](input.double(), Adj_block.double())
+            input = self.o8gnnlayers[layer](input.double(), Adj_block.double())
             #sum pooling
             graph_embeddings = torch.spmm(graph_pool, input.float())
             graph_embeddings = self.dropouts[layer](graph_embeddings)
