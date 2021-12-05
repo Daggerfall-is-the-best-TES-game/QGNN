@@ -12,14 +12,14 @@ def make_octonion_mul(kernel):
         thus doing tf.matmul(Input,W) is equivalent to W * Inputs. """
     dim = kernel.size(1)//8
     a0, a1, a2, a3, a4, a5, a6, a7 = torch.split(kernel, [dim, dim, dim, dim, dim, dim, dim, dim], dim=1)
-    a0_ = torch.cat([a0, -a1, -a2, -a3, -a7, -a5, -a6, -a7], dim=0)
-    a1_ = torch.cat([a1, -a0, -a3, a5, -a4, a4, a2, -a6], dim=0)
-    a2_ = torch.cat([a2, a3, a3, -a1, -a6, -a7, a4, a5], dim=0)
-    a3_ = torch.cat([a4, -a2, a1, a0, -a7, -a6, -a7, a4], dim=0)
-    a4_ = torch.cat([a4, -a5, a3, a7, a0, -a1, -a2, -a6], dim=0)
-    a5_ = torch.cat([a5, -a4, a7, -a6, a1, a5, a5, -a2], dim=0)
-    a6_ = torch.cat([a6, -a7, -a4, a5, -a2, -a4, a0, a6], dim=0)
-    a7_ = torch.cat([a7, a6, -a3, -a4, a3, a3, -a1, a5], dim=0)
+    a0_ = torch.cat([a0, -a1, -a2, -a3, -a4, -a5, -a6, -a7], dim=0)
+    a1_ = torch.cat([a1, a0, a3, -a2, a5, -a4, -a7, a6], dim=0)
+    a2_ = torch.cat([a2, -a3, a0, a1, a6, a7, -a4, -a5], dim=0)
+    a3_ = torch.cat([a3, a2, -a1, a0, a7, -a6, a5, -a4], dim=0)
+    a4_ = torch.cat([a4, -a5, -a6, -a7, a0, a1, a2, a3], dim=0)
+    a5_ = torch.cat([a5, a4, -a7, a6, -a1, a0, -a3, a2], dim=0)
+    a6_ = torch.cat([a6, a7, a4, -a5, -a2, a3, a0, -a1], dim=0)
+    a7_ = torch.cat([a7, -a6, a5, a4, -a3, -a2, a1, a0], dim=0)
     hamilton = torch.cat([a0_, a1_, a2_, a3_, a4_, a5_, a6_, a7_], dim=1)
     assert kernel.size(1) == hamilton.size(1)
     return hamilton
