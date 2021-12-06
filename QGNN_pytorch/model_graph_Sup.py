@@ -26,6 +26,8 @@ class SupOGNN(nn.Module):
             self.predictions.append(nn.Linear(self.hidden_size, self.num_classes))
             self.dropouts.append(nn.Dropout(dropout))
 
+        print(f"number of model parameters is {sum(p.numel() for p in self.parameters() if p.requires_grad)}")
+
     def forward(self, Adj_block, X_concat, graph_pool):
         prediction_scores = 0
         input = X_concat

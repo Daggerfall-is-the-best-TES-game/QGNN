@@ -79,6 +79,7 @@ class OGNN(torch.nn.Module):
         super().__init__()
         self.o8gnn1 = OGNNLayer(nfeat, nhid, dropout=dropout)
         self.o8gnn2 = OGNNLayer(nhid, nclass, dropout=dropout, octonion_ff=False, act=lambda x: x)  # prediction layer
+        print(f"number of model parameters is {sum(p.numel() for p in self.parameters() if p.requires_grad)}")
 
     def forward(self, x, adj):
         x = self.o8gnn1(x, adj)
