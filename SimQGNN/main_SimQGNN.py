@@ -14,8 +14,8 @@ if torch.cuda.is_available():
     torch.cuda.manual_seed_all(1337)
 np.random.seed(1337)
 
-class QGNN_KGC: # QGNN for knowledge graph completion, i.e., link prediction
-    def __init__(self, encoder="QGNN", decoder="QuatE", num_iterations=4000, batch_size=1024, learning_rate=0.01, label_smoothing=0.1,
+class OGNN_KGC: # QGNN for knowledge graph completion, i.e., link prediction
+    def __init__(self, encoder="OGNN", decoder="OuatE", num_iterations=4000, batch_size=1024, learning_rate=0.01, label_smoothing=0.1,
                  hidden_dim=128, emb_dim=128, num_layers=1, eval_step=1, eval_after=1):
         self.learning_rate = learning_rate
         self.num_iterations = num_iterations
@@ -104,9 +104,9 @@ class QGNN_KGC: # QGNN for knowledge graph completion, i.e., link prediction
         print("Creating the Adj matrix!")
         adj = get_adj_matrix(d.train_data, self.entity_idxs).to(device)
 
-        if self.encoder.lower() == "qgnn" or self.encoder.lower() == "gcn":
+        if self.encoder.lower() == "ognn" or self.encoder.lower() == "gcn":
             print("Training with GNNs ")
-            model = SimQGNN(self.encoder, self.decoder, self.emb_dim, self.hid_dim, adj, len(self.entity_idxs), \
+            model = SimOGNN(self.encoder, self.decoder, self.emb_dim, self.hid_dim, adj, len(self.entity_idxs), \
                             len(self.relation_idxs), self.num_layers).to(device)
 
         else:
@@ -179,8 +179,8 @@ if __name__ == '__main__':
     torch.backends.cudnn.deterministic = True
     d = Data(data_dir=data_dir)
 
-    gnnkge = QGNN_KGC(encoder=args.encoder, decoder=args.decoder, num_iterations=args.num_iterations, batch_size=args.batch_size,
-                learning_rate=args.lr, hidden_dim=args.hidden_dim, emb_dim=args.emb_dim, num_layers=args.num_layers,
-                eval_step=args.eval_step, eval_after=args.eval_after)
+    gnnkge = OGNN_KGC(encoder=args.encoder, decoder=args.decoder, num_iterations=args.num_iterations, batch_size=args.batch_size,
+                      learning_rate=args.lr, hidden_dim=args.hidden_dim, emb_dim=args.emb_dim, num_layers=args.num_layers,
+                      eval_step=args.eval_step, eval_after=args.eval_after)
 
     gnnkge.train_and_eval()

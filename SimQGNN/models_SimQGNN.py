@@ -13,9 +13,9 @@ import numpy as np
 
 
 """Run GNNs directly on the single undirected graph of entities"""
-class SimQGNN(torch.nn.Module):
+class SimOGNN(torch.nn.Module):
     def __init__(self, encoder, decoder, emb_dim, hid_dim, adj, n_entities, n_relations, num_layers=1):
-        super(SimQGNN, self).__init__()
+        super(SimOGNN, self).__init__()
         self.encoder = encoder
         self.decoder = decoder
         self.adj = adj
@@ -32,8 +32,8 @@ class SimQGNN(torch.nn.Module):
             print("SimRGCN: using GCN encoder")
             gnn_mode = GraphConvolution
         else: # self.encoder.lower() == "qgnn":
-            print("SimQGNN: using QGNN encoder")
-            gnn_mode = QGNN_layer
+            print("SimQGNN: using OGNN encoder")
+            gnn_mode = OGNN_layer
 
         for _layer in range(self.num_layers):
             if _layer == 0:
@@ -122,32 +122,38 @@ def vec_vec_quaternion_multiplication(q, p):  # vector * vector
 
     return torch.cat([qp_r, qp_i, qp_j, qp_k], dim=1)
 
-def regularization(quaternion):  # vectorized quaternion bs x 4dim
-    size = quaternion.size(1) // 4
-    r, i, j, k = torch.split(quaternion, size, dim=1)
-    return torch.mean(r ** 2) + torch.mean(i ** 2) + torch.mean(j ** 2) + torch.mean(k ** 2)
+def regularization(octonion):  # vectorized quaternion bs x 4dim
+    size = octonion.size(1) // 8
+    a0, a1, a2, a3, a4, a5, a6, a7 = torch.split(octonion, size, dim=1)
+    return sum(torch.mean(element ** 2) for element in (a0, a1, a2, a3, a4, a5, a6, a7))
 
-def make_quaternion_mul(kernel):
-    """" The constructed 'hamilton' W is a modified version of the quaternion representation,
-    thus doing tf.matmul(Input,W) is equivalent to W * Inputs. """
-    dim = kernel.size(1)//4
-    r, i, j, k = torch.split(kernel, [dim, dim, dim, dim], dim=1)
-    r2 = torch.cat([r, -i, -j, -k], dim=0)  # 0, 1, 2, 3
-    i2 = torch.cat([i, r, -k, j], dim=0)  # 1, 0, 3, 2
-    j2 = torch.cat([j, k, r, -i], dim=0)  # 2, 3, 0, 1
-    k2 = torch.cat([k, -j, i, r], dim=0)  # 3, 2, 1, 0
-    hamilton = torch.cat([r2, i2, j2, k2], dim=1)
+def make_octonion_mul(kernel):
+    """" The constructed 'hamilton' W is a modified version of the Octonion representation,
+        thus doing tf.matmul(Input,W) is equivalent to W * Inputs.
+        kernel = batch X hidden_size"""
+    dim = kernel.size(1) // 8
+
+    a0, a1, a2, a3, a4, a5, a6, a7 = torch.split(kernel, dim, dim=1)
+    hamiliton = [[a0, a1, a2, a3, a4, a5, a6, a7],
+                 [a1, -a0, a3, -a2, a5, -a4, -a7, a6],
+                 [a2, -a3, -a0, a1, a6, a7, -a4, -a5],
+                 [a3, a2, -a1, -a0, a7, -a6, a5, -a4],
+                 [a4, -a5, -a6, -a7, -a0, a1, a2, a3],
+                 [a5, a4, -a7, a6, -a1, -a0, -a3, a2],
+                 [a6, a7, a4, -a5, -a2, a3, -a0, -a1],
+                 [a7, -a6, a5, a4, -a3, -a2, a1, -a0]]
+    hamilton = torch.cat([torch.cat(row) for row in hamiliton], dim=1)
     assert kernel.size(1) == hamilton.size(1)
     return hamilton
 
 '''Quaternion graph neural networks! QGNN layer for other downstream tasks!'''
-class QGNN_layer(Module):
+class OGNN_layer(Module):
     def __init__(self, in_features, out_features, act=torch.tanh):
-        super(QGNN_layer, self).__init__()
+        super().__init__()
         self.in_features = in_features
         self.out_features = out_features
         self.act = act
-        self.weight = Parameter(torch.FloatTensor(self.in_features//4, self.out_features))
+        self.weight = Parameter(torch.FloatTensor(self.in_features//8, self.out_features))
         self.reset_parameters()
         self.bn = torch.nn.BatchNorm1d(out_features)
 
@@ -156,7 +162,7 @@ class QGNN_layer(Module):
         self.weight.data.uniform_(-stdv, stdv)
 
     def forward(self, input, adj):
-        hamilton = make_quaternion_mul(self.weight)
+        hamilton = make_octonion_mul(self.weight)
         support = torch.mm(input, hamilton)  # Hamilton product, quaternion multiplication!
         output = torch.spmm(adj, support)
         output = self.bn(output)  # using act torch.tanh with BatchNorm can produce competitive results
