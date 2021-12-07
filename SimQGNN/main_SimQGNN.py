@@ -62,7 +62,7 @@ class QGNN_KGC: # QGNN for knowledge graph completion, i.e., link prediction
 
             for i in range(0, len(test_data_idxs), self.batch_size):
                 data_batch, _ = self.get_batch(er_vocab, test_data_idxs, i)
-                e1_idx = torch.tensor(data_batch[:, 0]).to(device)
+                e1_idx = torch.tensor(data_batch[:, 0], dtype=torch.long).to(device)
                 r_idx = torch.tensor(data_batch[:, 1]).to(device)
                 e2_idx = torch.tensor(data_batch[:, 2]).to(device)
 
@@ -134,7 +134,7 @@ class QGNN_KGC: # QGNN for knowledge graph completion, i.e., link prediction
             for j in range(0, len(er_vocab_pairs), self.batch_size):
                 data_batch, targets = self.get_batch(er_vocab, er_vocab_pairs, j)
                 opt.zero_grad()
-                e1_idx = torch.tensor(data_batch[:, 0]).to(device)
+                e1_idx = torch.tensor(data_batch[:, 0], dtype=torch.long).to(device)
                 r_idx = torch.tensor(data_batch[:, 1]).to(device)
 
                 predictions = model.forward(e1_idx, r_idx, lst_ents)
