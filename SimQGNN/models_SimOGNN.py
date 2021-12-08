@@ -132,7 +132,6 @@ def make_octonion_mul(kernel):
         thus doing tf.matmul(Input,W) is equivalent to W * Inputs.
         kernel = batch X hidden_size"""
     dim = kernel.size(1) // 8
-
     a0, a1, a2, a3, a4, a5, a6, a7 = torch.split(kernel, dim, dim=1)
     hamiliton = [[a0, a1, a2, a3, a4, a5, a6, a7],
                  [a1, -a0, a3, -a2, a5, -a4, -a7, a6],

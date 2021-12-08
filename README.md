@@ -40,11 +40,11 @@ QGNN           |  GNNs for knowledge graph completion
 
 Regarding knowledge graph completion: 
 	
-	SimQGNN$ python main_SimQGNN.py --dataset codex-s --num_iterations 4000 --eval_after 2000 --batch_size 1024 --lr 0.01 --emb_dim 128 --hidden_dim 128 --encoder QGNN
+	SimQGNN$ python main_SimOGNN.py --dataset codex-s --num_iterations 4000 --eval_after 2000 --batch_size 1024 --lr 0.01 --emb_dim 128 --hidden_dim 128 --encoder OGNN
 	
-	SimQGNN$ python main_SimQGNN.py --dataset codex-m --num_iterations 4000 --eval_after 2000 --batch_size 1024 --lr 0.005 --emb_dim 128 --hidden_dim 128 --encoder QGNN
+	SimQGNN$ python main_SimOGNN.py --dataset codex-m --num_iterations 4000 --eval_after 2000 --batch_size 1024 --lr 0.005 --emb_dim 128 --hidden_dim 128 --encoder OGNN
 	
-	SimQGNN$ python main_SimQGNN.py --dataset codex-l --num_iterations 2000 --eval_after 1000 --batch_size 1024 --lr 0.0001 --emb_dim 128 --hidden_dim 128 --encoder QGNN
+	SimQGNN$ python main_SimOGNN.py --dataset codex-l --num_iterations 2000 --eval_after 1000 --batch_size 1024 --lr 0.0001 --emb_dim 128 --hidden_dim 128 --encoder OGNN
 
 Regarding node classification:
 

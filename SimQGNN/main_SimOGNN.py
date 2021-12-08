@@ -6,7 +6,7 @@ from collections import defaultdict
 import argparse
 import scipy.sparse as sp
 from utils_KGE import *
-from models_SimQGNN import *
+from models_SimOGNN import *
 
 torch.manual_seed(1337)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -14,7 +14,7 @@ if torch.cuda.is_available():
     torch.cuda.manual_seed_all(1337)
 np.random.seed(1337)
 
-class OGNN_KGC: # QGNN for knowledge graph completion, i.e., link prediction
+class OGNN_KGC: # OGNN for knowledge graph completion, i.e., link prediction
     def __init__(self, encoder="OGNN", decoder="OuatE", num_iterations=4000, batch_size=1024, learning_rate=0.01, label_smoothing=0.1,
                  hidden_dim=128, emb_dim=128, num_layers=1, eval_step=1, eval_after=1):
         self.learning_rate = learning_rate
@@ -62,9 +62,9 @@ class OGNN_KGC: # QGNN for knowledge graph completion, i.e., link prediction
 
             for i in range(0, len(test_data_idxs), self.batch_size):
                 data_batch, _ = self.get_batch(er_vocab, test_data_idxs, i)
-                e1_idx = torch.tensor(data_batch[:, 0]).to(device)
-                r_idx = torch.tensor(data_batch[:, 1]).to(device)
-                e2_idx = torch.tensor(data_batch[:, 2]).to(device)
+                e1_idx = torch.tensor(data_batch[:, 0], dtype=torch.long).to(device)
+                r_idx = torch.tensor(data_batch[:, 1], dtype=torch.long).to(device)
+                e2_idx = torch.tensor(data_batch[:, 2], dtype=torch.long).to(device)
 
                 predictions = model.forward(e1_idx, r_idx, lst_indexes).detach()
 
@@ -134,8 +134,8 @@ class OGNN_KGC: # QGNN for knowledge graph completion, i.e., link prediction
             for j in range(0, len(er_vocab_pairs), self.batch_size):
                 data_batch, targets = self.get_batch(er_vocab, er_vocab_pairs, j)
                 opt.zero_grad()
-                e1_idx = torch.tensor(data_batch[:, 0]).to(device)
-                r_idx = torch.tensor(data_batch[:, 1]).to(device)
+                e1_idx = torch.tensor(data_batch[:, 0], dtype=torch.long).to(device)
+                r_idx = torch.tensor(data_batch[:, 1], dtype=torch.long).to(device)
 
                 predictions = model.forward(e1_idx, r_idx, lst_ents)
                 if self.label_smoothing:
@@ -168,7 +168,7 @@ if __name__ == '__main__':
     parser.add_argument("--hidden_dim", type=int, default=128, nargs="?", help="")
     parser.add_argument("--emb_dim", type=int, default=128, nargs="?", help="")
     parser.add_argument("--num_layers", type=int, default=1, nargs="?", help="Number of layers")
-    parser.add_argument("--encoder", type=str, default="QGNN", nargs="?", help="GCN, QGNN, DistMult")
+    parser.add_argument("--encoder", type=str, default="OGNN", nargs="?", help="GCN, OGNN, DistMult")
     parser.add_argument("--decoder", type=str, default="DistMult", nargs="?", help="DistMult")
     parser.add_argument("--eval_step", type=int, default=1, nargs="?")
     parser.add_argument("--eval_after", type=int, default=2000, nargs="?")
